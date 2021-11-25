@@ -3,18 +3,33 @@ const state = {
   field: [],
   particles: [],
   show: {
-    paths: true,
-    field: true,
+    paths: false,
+    field: false,
     particles: true,
     fps: false,
   }
 };
+const actions = {
+  reset,
+  clear: () => { background(255) }
+}
 
 const size = 500;
 const fieldResolution = 25;
 const fieldGap = size / fieldResolution;
 const fieldLength = fieldResolution ** 2 * 2;
-const numParticles = 5000;
+const numParticles = 2000;
+
+const gui = new dat.GUI();
+gui.add(state.show, "paths");
+gui.add(state.show, "field");
+gui.add(state.show, "particles");
+gui.add(actions, "clear");
+gui.add(actions, "reset");
+
+const stats = Stats();
+stats.showPanel(0);
+document.body.append(stats.dom);
 
 function setup() {
   createCanvas(size, size);
@@ -24,7 +39,7 @@ function setup() {
   randomizeParticles();
 }
 
-function mousePressed(e) {
+function touchStarted() {
   if (mouseButton === LEFT) {
     state.paths.push([]);
   }
@@ -59,7 +74,7 @@ function resetField() {
   }
 }
 
-function mouseReleased() {
+function touchEnded() {
   resetField();
   const pvec = [];
   const pb = [];
@@ -97,7 +112,7 @@ function mouseReleased() {
 }
 
 function draw() {
-  background(255, 0, 0, 0.5);
+  background(225, 0, 0, 1);
   circle(mouseX, mouseY, 10);
 
   if (mouseIsPressed && mouseButton === LEFT) {
@@ -174,4 +189,6 @@ function draw() {
       state.particles[i + 1] += state.particles[i + 3];
     }
   }
+
+  stats.update();
 }

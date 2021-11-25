@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
     <title></title>
     <style>
       html,
@@ -14,10 +15,14 @@
         justify-content: center;
         align-items: center;
       }
+      * {
+        touch-action: manipulation;
+      }
     </style>
     <script src="https://unpkg.com/p5@1.4.0/lib/p5.min.js"></script>
     <script src="https://unpkg.com/gl-matrix@3.4.3/gl-matrix.js"></script>
     <script src="https://unpkg.com/dat.gui@0.7.7/build/dat.gui.min.js"></script>
+    <script src="https://unpkg.com/stats.js@0.17.0/build/stats.min.js"></script>
   </head>
   <body>
     <script src="index.js"></script>
