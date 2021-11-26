@@ -2,30 +2,51 @@ const state = {
   paths: [],
   field: [],
   particles: [],
+  settings: {
+    backgroundColor: "#8000aa",
+    particleColor: "#00eeee",
+    numParticles: 10000,
+    particleSize: 1,
+    particleSizeVariation: 5,
+    particleSpeed: 1,
+    directionRandomization: 1,
+  },
   show: {
     paths: false,
     field: false,
     particles: true,
     fps: false,
-  }
+  },
 };
 const actions = {
-  reset,
-  clear: () => { background(255) }
-}
+  resetPaths,
+  resetParticles: () => {
+    randomizeParticles();
+    clearToParticleColor();
+  },
+  clear: clearToParticleColor,
+};
 
 const size = 500;
 const fieldResolution = 25;
 const fieldGap = size / fieldResolution;
 const fieldLength = fieldResolution ** 2 * 2;
-const numParticles = 2000;
+const particleStride = 7;
 
 const gui = new dat.GUI();
 gui.add(state.show, "paths");
 gui.add(state.show, "field");
 gui.add(state.show, "particles");
+gui.addColor(state.settings, "backgroundColor");
+gui.addColor(state.settings, "particleColor");
+gui.add(state.settings, "numParticles", 1);
+gui.add(state.settings, "particleSize", 1);
+gui.add(state.settings, "particleSizeVariation", 0);
+gui.add(state.settings, "particleSpeed", 1);
+gui.add(state.settings, "directionRandomization", 0);
 gui.add(actions, "clear");
-gui.add(actions, "reset");
+gui.add(actions, "resetParticles");
+gui.add(actions, "resetPaths");
 
 const stats = Stats();
 stats.showPanel(0);
@@ -33,10 +54,10 @@ document.body.append(stats.dom);
 
 function setup() {
   createCanvas(size, size);
-  noCursor();
   stroke("white");
   resetField();
   randomizeParticles();
+  clearToParticleColor();
 }
 
 function touchStarted() {
@@ -45,14 +66,21 @@ function touchStarted() {
   }
 }
 
-function reset() {
+function clearToParticleColor() {
+  console.log(state.settings.particleColor);
+  fill(color(state.settings.particleColor));
+  rect(0, 0, size, size);
+}
+
+function resetPaths() {
   state.paths.length = 0;
   resetField();
   randomizeParticles();
 }
 
 function randomizeParticles() {
-  for (let i = 0; i < numParticles; i += 5) {
+  state.particles.length = state.settings.numParticles;
+  for (let i = 0; i < state.settings.numParticles; i += particleStride) {
     // position
     state.particles[i] = random(size);
     state.particles[i + 1] = random(size);
@@ -61,8 +89,14 @@ function randomizeParticles() {
     state.particles[i + 2] = 0;
     state.particles[i + 3] = 0;
 
-    // ttl
+    // ttlStart
     state.particles[i + 4] = random(10, 1000);
+
+    // ttl
+    state.particles[i + 5] = state.particles[i + 4];
+
+    // size
+    state.particles[i + 6] = state.settings.particleSize + random(state.settings.particleSizeVariation);
   }
 }
 
@@ -102,7 +136,7 @@ function touchEnded() {
 
         const t = glMatrix.vec2.dist(pb, fo);
 
-        glMatrix.vec2.lerp(fv, fv, pvec, 2 / t);
+        glMatrix.vec2.lerp(fv, fv, pvec, 1 / t);
         glMatrix.vec2.normalize(fv, fv);
         state.field[i] = fv[0];
         state.field[i + 1] = fv[1];
@@ -112,8 +146,9 @@ function touchEnded() {
 }
 
 function draw() {
-  background(225, 0, 0, 1);
-  circle(mouseX, mouseY, 10);
+  const backgroundColor = color(state.settings.backgroundColor);
+  backgroundColor.setAlpha(1);
+  background(backgroundColor);
 
   if (mouseIsPressed && mouseButton === LEFT) {
     state.paths[state.paths.length - 1].push(mouseX, mouseY);
@@ -126,10 +161,10 @@ function draw() {
         line(path[i], path[i + 1], path[i + 2], path[i + 3]);
       }
     }
-    stroke("white");
   }
 
   if (state.show.field) {
+    stroke("white");
     for (let i = 0; i < state.field.length; i += 2) {
       const ox = ((i / 2) % fieldResolution) * fieldGap;
       const oy = Math.floor(i / 2 / fieldResolution) * fieldGap;
@@ -145,23 +180,30 @@ function draw() {
     const pv = [];
     const or = [0, 0];
 
-    for (let i = 0; i < state.particles.length; i += 5) {
-      if (state.particles[i + 4] < 0) {
+    noStroke();
+
+    const particleColor = color(state.settings.particleColor);
+
+    for (let i = 0; i < state.particles.length; i += particleStride) {
+      if (state.particles[i + 5] < 0) {
         state.particles[i] = random(size);
         state.particles[i + 1] = random(size);
         state.particles[i + 2] = 0;
         state.particles[i + 3] = 0;
         state.particles[i + 4] = random(500, 1000);
+        state.particles[i + 5] = state.particles[i + 4];
       } else {
-        state.particles[i + 4] -= 1;
+        state.particles[i + 5] -= 1;
       }
 
-      circle(state.particles[i], state.particles[i + 1], 1);
+      particleColor.setAlpha(sin((state.particles[i + 5] / state.particles[i + 4]) * Math.PI) * 255);
+      fill(particleColor);
+      rect(state.particles[i], state.particles[i + 1], state.particles[i + 6], state.particles[i + 6]);
 
-      if (state.particles[i] > size) state.particles[i] = 0;
-      if (state.particles[i + 1] > size) state.particles[i + 1] = 0;
-      if (state.particles[i] < 0) state.particles[i] = size;
-      if (state.particles[i + 1] < 0) state.particles[i + 1] = size;
+      if (state.particles[i] > size * 1.01) state.particles[i] = -size * 0.01;
+      if (state.particles[i + 1] > size * 1.01) state.particles[i + 1] = -size * 0.01;
+      if (state.particles[i] < 0 - size * 0.01) state.particles[i] = size * 1.01;
+      if (state.particles[i + 1] < 0 - size * 0.01) state.particles[i + 1] = size * 1.01;
 
       const px = state.particles[i];
       const py = state.particles[i + 1];
@@ -181,12 +223,17 @@ function draw() {
       pv[1] = state.particles[i + 3];
       glMatrix.vec2.lerp(pv, pv, fv, 10 / t);
       glMatrix.vec2.normalize(pv, pv);
-      glMatrix.vec2.rotate(pv, pv, or, random(-0.05, 0.05));
+      glMatrix.vec2.rotate(
+        pv,
+        pv,
+        or,
+        random(-0.05 * state.settings.directionRandomization, 0.05 * state.settings.directionRandomization)
+      );
       state.particles[i + 2] = pv[0];
       state.particles[i + 3] = pv[1];
 
-      state.particles[i] += state.particles[i + 2];
-      state.particles[i + 1] += state.particles[i + 3];
+      state.particles[i] += state.particles[i + 2] * state.settings.particleSpeed;
+      state.particles[i + 1] += state.particles[i + 3] * state.settings.particleSpeed;
     }
   }
 
