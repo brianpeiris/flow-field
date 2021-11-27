@@ -147,7 +147,7 @@ function touchEnded() {
 
         const t = glMatrix.vec2.dist(pb, fo);
 
-        glMatrix.vec2.lerp(fv, fv, pvec, 1 / t);
+        glMatrix.vec2.lerp(fv, fv, pvec, 2 / t);
         glMatrix.vec2.normalize(fv, fv);
         state.field[i] = fv[0];
         state.field[i + 1] = fv[1];
