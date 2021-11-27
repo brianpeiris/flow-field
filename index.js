@@ -2,10 +2,12 @@ const state = {
   paths: [],
   field: [],
   particles: [],
+  drawLastPath: false,
+  lastPathPushed: 0,
   settings: {
     backgroundColor: "#8000aa",
     particleColor: "#00eeee",
-    numParticles: 10000,
+    numParticles: 2500,
     particleSize: 1,
     particleSizeVariation: 5,
     particleSpeed: 1,
@@ -16,6 +18,7 @@ const state = {
     field: false,
     particles: true,
     fps: false,
+    lastPath: true,
   },
 };
 const actions = {
@@ -27,16 +30,18 @@ const actions = {
   clear: clearToParticleColor,
 };
 
-const size = 500;
+const size = Math.min(innerWidth, 500);
 const fieldResolution = 25;
 const fieldGap = size / fieldResolution;
 const fieldLength = fieldResolution ** 2 * 2;
 const particleStride = 7;
 
 const gui = new dat.GUI();
+gui.closed = true;
 gui.add(state.show, "paths");
 gui.add(state.show, "field");
 gui.add(state.show, "particles");
+gui.add(state.show, "lastPath");
 gui.addColor(state.settings, "backgroundColor");
 gui.addColor(state.settings, "particleColor");
 gui.add(state.settings, "numParticles", 1);
@@ -54,20 +59,26 @@ document.body.append(stats.dom);
 
 function setup() {
   createCanvas(size, size);
+  pixelDensity(1);
   stroke("white");
   resetField();
   randomizeParticles();
   clearToParticleColor();
 }
 
+function mousePressed() {
+  if ((performance.now() - state.lastPathPushed) < 100) return;
+  state.paths.push([]);
+  state.lastPathPushed = performance.now();
+}
+
 function touchStarted() {
-  if (mouseButton === LEFT) {
-    state.paths.push([]);
-  }
+  if ((performance.now() - state.lastPathPushed) < 100) return;
+  state.paths.push([]);
+  state.lastPathPushed = performance.now();
 }
 
 function clearToParticleColor() {
-  console.log(state.settings.particleColor);
   fill(color(state.settings.particleColor));
   rect(0, 0, size, size);
 }
@@ -143,6 +154,7 @@ function touchEnded() {
       }
     }
   }
+  state.drawLastPath = true;
 }
 
 function draw() {
@@ -150,7 +162,7 @@ function draw() {
   backgroundColor.setAlpha(1);
   background(backgroundColor);
 
-  if (mouseIsPressed && mouseButton === LEFT) {
+  if (mouseIsPressed && state.paths.length) {
     state.paths[state.paths.length - 1].push(mouseX, mouseY);
   }
 
@@ -161,6 +173,19 @@ function draw() {
         line(path[i], path[i + 1], path[i + 2], path[i + 3]);
       }
     }
+  }
+
+  if (state.drawLastPath) {
+    if (state.show.lastPath) {
+    stroke("lightblue");
+    const path = state.paths[state.paths.length - 1];
+    if (path) {
+    for (let i = 0; i < path.length - 2; i += 2) {
+      line(path[i], path[i + 1], path[i + 2], path[i + 3]);
+    }
+    }
+    }
+    state.drawLastPath = false;
   }
 
   if (state.show.field) {
@@ -198,7 +223,7 @@ function draw() {
 
       particleColor.setAlpha(sin((state.particles[i + 5] / state.particles[i + 4]) * Math.PI) * 255);
       fill(particleColor);
-      rect(state.particles[i], state.particles[i + 1], state.particles[i + 6], state.particles[i + 6]);
+      circle(state.particles[i], state.particles[i + 1], state.particles[i + 6]);
 
       if (state.particles[i] > size * 1.01) state.particles[i] = -size * 0.01;
       if (state.particles[i + 1] > size * 1.01) state.particles[i + 1] = -size * 0.01;
