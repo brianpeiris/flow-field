@@ -68,14 +68,18 @@ function setup() {
 
 function mousePressed() {
   if (performance.now() - state.lastPathPushed < 100) return;
-  state.paths.push([]);
-  state.lastPathPushed = performance.now();
+  if (mouseX >= 0 && mouseX <= size && mouseY >= 0 && mouseY <= size) {
+    state.paths.push([]);
+    state.lastPathPushed = performance.now();
+  }
 }
 
 function touchStarted() {
   if (performance.now() - state.lastPathPushed < 100) return;
-  state.paths.push([]);
-  state.lastPathPushed = performance.now();
+  if (mouseX >= 0 && mouseX <= size && mouseY >= 0 && mouseY <= size) {
+    state.paths.push([]);
+    state.lastPathPushed = performance.now();
+  }
 }
 
 function clearToParticleColor() {
@@ -162,7 +166,7 @@ function draw() {
   backgroundColor.setAlpha(1);
   background(backgroundColor);
 
-  if (mouseIsPressed && state.paths.length) {
+  if (mouseIsPressed && state.paths.length && mouseX >= 0 && mouseX <= size && mouseY >= 0 && mouseY <= size) {
     state.paths[state.paths.length - 1].push(mouseX, mouseY);
   }
 
