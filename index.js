@@ -4,6 +4,7 @@ const state = {
   particles: [],
   drawLastPath: false,
   lastPathPushed: 0,
+  lastPathCount: 0,
   settings: {
     backgroundColor: "#8000aa",
     particleColor: "#00eeee",
@@ -158,7 +159,10 @@ function touchEnded() {
       }
     }
   }
-  state.drawLastPath = true;
+  if (state.lastPathCount !== state.paths.length) {
+    state.drawLastPath = true;
+    state.lastPathCount = state.paths.length;
+  }
 }
 
 function draw() {
