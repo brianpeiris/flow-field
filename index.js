@@ -67,13 +67,13 @@ function setup() {
 }
 
 function mousePressed() {
-  if ((performance.now() - state.lastPathPushed) < 100) return;
+  if (performance.now() - state.lastPathPushed < 100) return;
   state.paths.push([]);
   state.lastPathPushed = performance.now();
 }
 
 function touchStarted() {
-  if ((performance.now() - state.lastPathPushed) < 100) return;
+  if (performance.now() - state.lastPathPushed < 100) return;
   state.paths.push([]);
   state.lastPathPushed = performance.now();
 }
@@ -130,13 +130,13 @@ function touchEnded() {
     const oy = Math.floor(i / 2 / fieldResolution) * fieldGap;
     fo[0] = ox;
     fo[1] = oy;
-    fv[0] = state.field[i];
-    fv[1] = state.field[i + 1];
 
     for (const path of state.paths) {
       if (path.length < 4) continue;
 
       for (let j = 0; j < path.length - 2; j += 2) {
+        fv[0] = state.field[i];
+        fv[1] = state.field[i + 1];
         pvec[0] = path[j + 2];
         pvec[1] = path[j + 3];
         pb[0] = path[j];
@@ -177,13 +177,13 @@ function draw() {
 
   if (state.drawLastPath) {
     if (state.show.lastPath) {
-    stroke("lightblue");
-    const path = state.paths[state.paths.length - 1];
-    if (path) {
-    for (let i = 0; i < path.length - 2; i += 2) {
-      line(path[i], path[i + 1], path[i + 2], path[i + 3]);
-    }
-    }
+      stroke("lightblue");
+      const path = state.paths[state.paths.length - 1];
+      if (path) {
+        for (let i = 0; i < path.length - 2; i += 2) {
+          line(path[i], path[i + 1], path[i + 2], path[i + 3]);
+        }
+      }
     }
     state.drawLastPath = false;
   }
